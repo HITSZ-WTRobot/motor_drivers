@@ -331,7 +331,7 @@ void VESC_CAN_Fifo0ReceiveCallback(CAN_HandleTypeDef* hcan)
  * @param header
  * @param data
  */
-void VESC_CAN_BaseReceiveCallback(CAN_HandleTypeDef*         hcan,
+void VESC_CAN_BaseReceiveCallback(const CAN_HandleTypeDef*   hcan,
                                   const CAN_RxHeaderTypeDef* header,
                                   const uint8_t              data[])
 {

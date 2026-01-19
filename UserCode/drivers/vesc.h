@@ -212,7 +212,7 @@ HAL_StatusTypeDef VESC_CAN_FilterInit(CAN_HandleTypeDef* hcan, uint32_t filter_b
 void              VESC_ResetAngle(VESC_t* hvesc);
 void              VESC_SendSetCmd(VESC_t* hvesc, VESC_CAN_PocketSet_t pocket_id, float value);
 void              VESC_CAN_Fifo0ReceiveCallback(CAN_HandleTypeDef* hcan);
-void              VESC_CAN_BaseReceiveCallback(CAN_HandleTypeDef*         hcan,
+void              VESC_CAN_BaseReceiveCallback(const CAN_HandleTypeDef*   hcan,
                                                const CAN_RxHeaderTypeDef* header,
                                                const uint8_t              data[]);
 
