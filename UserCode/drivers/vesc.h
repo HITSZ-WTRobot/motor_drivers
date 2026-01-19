@@ -170,6 +170,7 @@ typedef struct
     float              angle_zero; ///< 零点角度
 
     uint32_t feedback_count; ///< 反馈数
+    uint32_t snacks;         ///< 小零食
     struct
     {
         float erpm;          ///< 电转速
@@ -215,6 +216,11 @@ void              VESC_CAN_Fifo0ReceiveCallback(CAN_HandleTypeDef* hcan);
 void              VESC_CAN_BaseReceiveCallback(const CAN_HandleTypeDef*   hcan,
                                                const CAN_RxHeaderTypeDef* header,
                                                const uint8_t              data[]);
+
+static bool VESC_isConnected(VESC_t* hvesc)
+{
+    return hvesc->snacks > 0;
+}
 
 #ifdef __cplusplus
 }
