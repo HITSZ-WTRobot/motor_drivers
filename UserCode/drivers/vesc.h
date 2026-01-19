@@ -47,17 +47,6 @@ extern "C"
 #    define VESC_NUM (16)
 #endif
 
-#ifndef VESC_ID_OFFSET
-/**
- * VESC 电调 id 偏移量，驱动内只能注册 id 范围
- *      [VESC_ID_OFFSET, VESC_ID_OFFSET + VESC_NUM)
- * 的电机，会静态分配
- *      4 * VESC_CAN_NUM * ( 1 + VESC_NUM )
- * 的内存.
- */
-#    define VESC_ID_OFFSET (0)
-#endif
-
 /* 参数范围限制 */
 #define VESC_SET_DUTY_MAX              (1.0f)
 #define VESC_SET_CURRENT_MAX           (2e6f)
@@ -214,12 +203,6 @@ typedef struct
     uint8_t            id;         ///< 控制器 id，0xFF 代表广播
     uint8_t            electrodes; ///< 电极数
 } VESC_Config_t;
-
-typedef struct
-{
-    CAN_HandleTypeDef* hcan;
-    VESC_t*            motors[VESC_NUM];
-} VESC_FeedbackMap;
 
 #define __VESC_GET_ANGLE(__VESC_HANDLE__)    (((VESC_t*) (__VESC_HANDLE__))->abs_angle)
 #define __VESC_GET_VELOCITY(__VESC_HANDLE__) (((VESC_t*) (__VESC_HANDLE__))->velocity)

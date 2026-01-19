@@ -32,27 +32,31 @@ extern "C"
 {
 #endif
 
+typedef struct
+{
+    uint8_t id; ///< 控制器 id，0xFF 代表广播
+    VESC_t* vesc;
+} VESC_FeedbackMapItem;
+
+typedef struct
+{
+    CAN_HandleTypeDef*   hcan;
+    VESC_FeedbackMapItem items[VESC_NUM];
+    size_t               size;
+} VESC_FeedbackMap;
+
 static VESC_FeedbackMap map[VESC_CAN_NUM];
 static size_t           map_size = 0;
 
-static inline int to_map_id(const int id)
-{
-    return id - VESC_ID_OFFSET;
-}
-
-static inline VESC_t* get_vesc_handle(VESC_t* motors[VESC_NUM], const CAN_RxHeaderTypeDef* header)
+static VESC_t* get_vesc_handle(VESC_FeedbackMap* map, const CAN_RxHeaderTypeDef* header)
 {
     if (header->IDE != CAN_ID_EXT)
         return NULL;
     const uint8_t id = header->ExtId & 0xFF;
-    // 不在注册范围内
-    if (id < VESC_ID_OFFSET || id >= VESC_ID_OFFSET + VESC_NUM)
-        return NULL;
-    if (motors[to_map_id(id)] == NULL)
-    {
-        return NULL;
-    }
-    return motors[to_map_id(id)];
+    for (size_t i = 0; i < map->size; i++)
+        if (map->items[i].id == id)
+            return map->items[i].vesc;
+    return NULL;
 }
 
 static float clamp_value(const float value, const float max)
@@ -249,25 +253,36 @@ void VESC_Init(VESC_t* hvesc, const VESC_Config_t* config)
     hvesc->enable     = true;
     hvesc->auto_zero  = config->auto_zero;
 
-    VESC_t** mapped_motors = NULL;
+    VESC_FeedbackMap* map_ptr = NULL;
     for (int i = 0; i < map_size; i++)
         if (map[i].hcan == hvesc->hcan)
-            mapped_motors = map[i].motors;
-    if (mapped_motors == NULL)
+            map_ptr = &map[i];
+    if (map_ptr == NULL)
     {
         // CAN 未被注册，添加到 map
-        map[map_size] = (VESC_FeedbackMap) { .hcan = hvesc->hcan, .motors = { NULL } };
-        mapped_motors = map[map_size].motors;
+        map[map_size] = (VESC_FeedbackMap) { .hcan  = hvesc->hcan,
+                                             .items = { { .id = config->id, .vesc = hvesc } },
+                                             .size  = 1 };
         map_size++;
-    }
-    if (mapped_motors[to_map_id(hvesc->id)] != NULL)
-    {
-        // 电调 ID 冲突
-        Error_Handler();
     }
     else
     {
-        mapped_motors[to_map_id(hvesc->id)] = hvesc;
+        if (map_ptr->size >= VESC_NUM)
+        {
+            // 注册满了
+            Error_Handler();
+            return;
+        }
+        for (size_t i = 0; i < map_ptr->size; i++)
+            if (map_ptr->items[i].id == config->id)
+            {
+                // 电调 ID 冲突
+                Error_Handler();
+                return;
+            }
+        map_ptr->items[map_ptr->size].id   = config->id;
+        map_ptr->items[map_ptr->size].vesc = hvesc;
+        map_ptr->size++;
     }
 }
 
@@ -324,7 +339,7 @@ void VESC_CAN_BaseReceiveCallback(CAN_HandleTypeDef*         hcan,
     {
         if (hcan == map[i].hcan)
         {
-            VESC_t* hvesc = get_vesc_handle(map[i].motors, header);
+            VESC_t* hvesc = get_vesc_handle(&map[i], header);
             if (hvesc != NULL)
                 VESC_CAN_DataDecode(hvesc, header->ExtId >> 8, data);
             return;
