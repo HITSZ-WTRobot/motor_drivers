@@ -69,6 +69,28 @@ void SCurveTraj_Axis_Update(SCurveTrajFollower_Axis_t* follower)
     Motor_VelCtrl_SetRef(follower->ctrl, DPS2RPM(velocity));
 }
 
+/**
+ * 停止并清零所有
+ * @note 该函数执行包括：停止曲线，速度置零，PD 清零，电机角度归零
+ * @param follower
+ */
+void SCurveTraj_Axis_ResetAll(SCurveTrajFollower_Axis_t* follower)
+{
+    // 清零 S 曲线
+    follower->running = false;
+    SCurve_Reset(&follower->s);
+    memset(&follower->pd, 0, sizeof(follower->pd));
+    Motor_VelCtrl_SetRef(follower->ctrl, 0);
+    MotorCtrl_ResetAngle(follower->ctrl);
+}
+
+void SCurveTraj_Axis_Stop(SCurveTrajFollower_Axis_t* follower)
+{
+    follower->running = false;
+    Motor_VelCtrl_SetRef(follower->ctrl, 0);
+    memset(&follower->pd, 0, sizeof(follower->pd));
+}
+
 // 辅助函数
 static SCurve_Result_t axis_s_curve_init(SCurve_t*                        s,
                                          const SCurveTrajFollower_Axis_t* follower,
@@ -190,6 +212,33 @@ void SCurveTraj_Group_Update(SCurveTrajFollower_Group_t* follower)
         const float velocity = ff_velocity + follower->items[i].pd.output;
         // 设置电机速度
         Motor_VelCtrl_SetRef(follower->items[i].ctrl, DPS2RPM(velocity));
+    }
+}
+
+/**
+ * 停止并清零所有
+ * @note 该函数执行包括：停止曲线，速度置零，PD 清零，电机角度归零
+ * @param follower
+ */
+void SCurveTraj_Group_ResetAll(SCurveTrajFollower_Group_t* follower)
+{
+    // 清零 S 曲线
+    follower->running = false;
+    SCurve_Reset(&follower->s);
+    for (size_t i = 0; i < follower->item_count; i++)
+    {
+        memset(&follower->items[i].pd, 0, sizeof(follower->items[i].pd));
+        Motor_VelCtrl_SetRef(follower->items[i].ctrl, 0);
+        MotorCtrl_ResetAngle(follower->items[i].ctrl);
+    }
+}
+void SCurveTraj_Group_Stop(SCurveTrajFollower_Group_t* follower)
+{
+    follower->running = false;
+    for (size_t i = 0; i < follower->item_count; i++)
+    {
+        Motor_VelCtrl_SetRef(follower->items[i].ctrl, 0);
+        memset(&follower->items[i].pd, 0, sizeof(follower->items[i].pd));
     }
 }
 
