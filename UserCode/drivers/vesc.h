@@ -47,17 +47,6 @@ extern "C"
 #    define VESC_NUM (16)
 #endif
 
-#ifndef VESC_ID_OFFSET
-/**
- * VESC 电调 id 偏移量，驱动内只能注册 id 范围
- *      [VESC_ID_OFFSET, VESC_ID_OFFSET + VESC_NUM)
- * 的电机，会静态分配
- *      4 * VESC_CAN_NUM * ( 1 + VESC_NUM )
- * 的内存.
- */
-#    define VESC_ID_OFFSET (0)
-#endif
-
 /* 参数范围限制 */
 #define VESC_SET_DUTY_MAX              (1.0f)
 #define VESC_SET_CURRENT_MAX           (2e6f)
@@ -181,6 +170,7 @@ typedef struct
     float              angle_zero; ///< 零点角度
 
     uint32_t feedback_count; ///< 反馈数
+    uint32_t snacks;         ///< 小零食
     struct
     {
         float erpm;          ///< 电转速
@@ -215,12 +205,6 @@ typedef struct
     uint8_t            electrodes; ///< 电极数
 } VESC_Config_t;
 
-typedef struct
-{
-    CAN_HandleTypeDef* hcan;
-    VESC_t*            motors[VESC_NUM];
-} VESC_FeedbackMap;
-
 #define __VESC_GET_ANGLE(__VESC_HANDLE__)    (((VESC_t*) (__VESC_HANDLE__))->abs_angle)
 #define __VESC_GET_VELOCITY(__VESC_HANDLE__) (((VESC_t*) (__VESC_HANDLE__))->velocity)
 
@@ -229,9 +213,14 @@ HAL_StatusTypeDef VESC_CAN_FilterInit(CAN_HandleTypeDef* hcan, uint32_t filter_b
 void              VESC_ResetAngle(VESC_t* hvesc);
 void              VESC_SendSetCmd(VESC_t* hvesc, VESC_CAN_PocketSet_t pocket_id, float value);
 void              VESC_CAN_Fifo0ReceiveCallback(CAN_HandleTypeDef* hcan);
-void              VESC_CAN_BaseReceiveCallback(CAN_HandleTypeDef*         hcan,
+void              VESC_CAN_BaseReceiveCallback(const CAN_HandleTypeDef*   hcan,
                                                const CAN_RxHeaderTypeDef* header,
                                                const uint8_t              data[]);
+
+static bool VESC_isConnected(VESC_t* hvesc)
+{
+    return hvesc->snacks > 0;
+}
 
 #ifdef __cplusplus
 }

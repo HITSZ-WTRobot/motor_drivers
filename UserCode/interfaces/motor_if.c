@@ -318,9 +318,16 @@ void Motor_VelCtrlUpdate(Motor_VelCtrl_t* hctrl)
     if (!hctrl->enable)
         return;
 
-#if defined(MOTOR_IF_INTERNAL_VEL) || defined(MOTOR_IF_INTERNAL_VEL_POS)
-    if (hctrl->ctrl_mode == MOTOR_CTRL_INTERNAL_VEL ||
-        hctrl->ctrl_mode == MOTOR_CTRL_INTERNAL_VEL_POS)
+#if defined(MOTOR_IF_INTERNAL_VEL)
+    if (hctrl->ctrl_mode == MOTOR_CTRL_INTERNAL_VEL)
+    {
+        motor_send_internal_velocity(hctrl->motor_type, hctrl->motor, hctrl->velocity);
+        return;
+    }
+#endif
+
+#if defined(MOTOR_IF_INTERNAL_VEL_POS)
+    if (hctrl->ctrl_mode == MOTOR_CTRL_INTERNAL_VEL_POS)
     {
         motor_send_internal_velocity(hctrl->motor_type, hctrl->motor, hctrl->velocity);
         return;
