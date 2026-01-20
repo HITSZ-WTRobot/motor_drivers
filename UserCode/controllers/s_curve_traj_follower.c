@@ -126,7 +126,10 @@ SCurve_Result_t SCurveTraj_Axis_SetTarget(SCurveTrajFollower_Axis_t* follower, c
     if (r == S_CURVE_SUCCESS)
         follower->running = true;
     else
-        follower->running = running;
+        // 由于 S 曲线规划失败仍会破坏原有曲线结构，所以需要停止曲线防止跑飞
+        // TODO: 研究更好的解决方案，比如让曲线恢复
+        SCurveTraj_Axis_Stop(follower);
+    // follower->running = running;
 
     return r;
 }
@@ -286,7 +289,10 @@ SCurve_Result_t SCurveTraj_Group_SetTarget(SCurveTrajFollower_Group_t* follower,
     if (r == S_CURVE_SUCCESS)
         follower->running = true;
     else
-        follower->running = running;
+        // 由于 S 曲线规划失败仍会破坏原有曲线结构，所以需要停止曲线防止跑飞
+        // TODO: 研究更好的解决方案，比如让曲线恢复
+        SCurveTraj_Group_Stop(follower);
+    // follower->running = running;
 
     return r;
 }
