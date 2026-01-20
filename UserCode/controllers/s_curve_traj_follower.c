@@ -133,6 +133,35 @@ SCurve_Result_t SCurveTraj_Axis_SetTarget(SCurveTrajFollower_Axis_t* follower, c
 
     return r;
 }
+/**
+ * 设置相对目标位置
+ * @param follower
+ * @param delta_pos 相对角度
+ * @return 是否规划成功
+ */
+SCurve_Result_t SCurveTraj_Axis_SetTargetRelPos(SCurveTrajFollower_Axis_t* follower,
+                                                const float                delta_pos)
+{
+    const bool running = follower->running;
+
+    follower->running = false;
+
+    const float current_pos = MotorCtrl_GetAngle(follower->ctrl);
+
+    const SCurve_Result_t r =
+            axis_s_curve_init(&follower->s, follower, running, current_pos + delta_pos);
+
+    follower->now = 0;
+    if (r == S_CURVE_SUCCESS)
+        follower->running = true;
+    else
+        // 由于 S 曲线规划失败仍会破坏原有曲线结构，所以需要停止曲线防止跑飞
+        // TODO: 研究更好的解决方案，比如让曲线恢复
+        SCurveTraj_Axis_Stop(follower);
+    // follower->running = running;
+
+    return r;
+}
 
 /**
  * 计算预计需要的时间
@@ -284,6 +313,43 @@ SCurve_Result_t SCurveTraj_Group_SetTarget(SCurveTrajFollower_Group_t* follower,
 
     follower->running       = false;
     const SCurve_Result_t r = group_s_curve_init(&follower->s, follower, running, target);
+
+    follower->now = 0;
+    if (r == S_CURVE_SUCCESS)
+        follower->running = true;
+    else
+        // 由于 S 曲线规划失败仍会破坏原有曲线结构，所以需要停止曲线防止跑飞
+        // TODO: 研究更好的解决方案，比如让曲线恢复
+        SCurveTraj_Group_Stop(follower);
+    // follower->running = running;
+
+    return r;
+}
+/**
+ * 设置目标相对位置
+ * @note 当前角度为所有受控电机角度的平均值
+ * @param follower
+ * @param delta_pos 相对角度
+ * @return 是否规划成功
+ */
+SCurve_Result_t SCurveTraj_Group_SetTargetRelPos(SCurveTrajFollower_Group_t* follower,
+                                                 float                       delta_pos)
+{
+    const bool running = follower->running;
+
+    follower->running = false;
+
+    float current_pos = 0;
+
+    for (size_t i = 0; i < follower->item_count; i++)
+    {
+        current_pos += MotorCtrl_GetAngle(follower->items[i].ctrl);
+    }
+
+    current_pos /= (float) follower->item_count;
+
+    const SCurve_Result_t r =
+            group_s_curve_init(&follower->s, follower, running, current_pos + delta_pos);
 
     follower->now = 0;
     if (r == S_CURVE_SUCCESS)

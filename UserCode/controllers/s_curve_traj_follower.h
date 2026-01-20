@@ -122,6 +122,8 @@ void SCurveTraj_Axis_ResetAll(SCurveTrajFollower_Axis_t* follower);
 void SCurveTraj_Axis_Stop(SCurveTrajFollower_Axis_t* follower);
 
 SCurve_Result_t SCurveTraj_Axis_SetTarget(SCurveTrajFollower_Axis_t* follower, float target);
+SCurve_Result_t SCurveTraj_Axis_SetTargetRelPos(SCurveTrajFollower_Axis_t* follower,
+                                                float                      delta_pos);
 
 float SCurveTraj_Axis_EstimateDuration(const SCurveTrajFollower_Axis_t* follower, float target);
 
@@ -134,6 +136,8 @@ void SCurveTraj_Group_ResetAll(SCurveTrajFollower_Group_t* follower);
 void SCurveTraj_Group_Stop(SCurveTrajFollower_Group_t* follower);
 
 SCurve_Result_t SCurveTraj_Group_SetTarget(SCurveTrajFollower_Group_t* follower, float target);
+SCurve_Result_t SCurveTraj_Group_SetTargetRelPos(SCurveTrajFollower_Group_t* follower,
+                                                 float                       delta_pos);
 
 float SCurveTraj_Group_EstimateDuration(const SCurveTrajFollower_Group_t* follower, float target);
 
