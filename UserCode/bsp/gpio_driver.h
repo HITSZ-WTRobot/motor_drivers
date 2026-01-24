@@ -24,16 +24,18 @@
 #define GPIO_DRIVER_H
 #include "main.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#define USE_EXTI
 
 typedef struct
 {
     GPIO_TypeDef* port;
     uint16_t      pin;
 } GPIO_t;
+
+static inline GPIO_PinState GPIO_ReadPin(GPIO_t* hgpio)
+{
+    return HAL_GPIO_ReadPin(hgpio->port, hgpio->pin);
+}
 
 static inline void GPIO_WritePin(GPIO_t* hgpio, const GPIO_PinState PinState)
 {
@@ -55,8 +57,12 @@ static inline void GPIO_TogglePin(GPIO_t* hgpio)
     HAL_GPIO_TogglePin(hgpio->port, hgpio->pin);
 }
 
-#ifdef __cplusplus
-}
+#ifdef USE_EXTI
+typedef void (*EXTI_Callback)(const GPIO_t* gpio, uint32_t counter, void* data);
+void GPIO_EXTI_RegisterCallback(const GPIO_t* gpio, EXTI_Callback callback, void* data);
+void GPIO_EXTI_UnregisterCallback(const GPIO_t* gpio);
+void GPIO_EXTI_Callback(const uint16_t GPIO_Pin);
+
 #endif
 
 #endif // GPIO_DRIVER_H
