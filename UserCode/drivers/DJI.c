@@ -30,15 +30,10 @@ extern "C"
 {
 #endif
 
-static void DJI_Feed(DJI_t* dji)
+static void watchdog_feed(DJI_t* dji)
 {
-    dji->feedback_snacks = 10;
-}
-
-static void DJI_Eat(DJI_t* dji)
-{
-    if (dji->feedback_snacks > 0)
-        dji->feedback_snacks--;
+    if (dji->watchdog != -1)
+        dji->watchdog = 10;
 }
 
 static DJI_FeedbackMap map[CAN_NUM];
@@ -84,7 +79,7 @@ void DJI_Init(DJI_t* hdji, const DJI_Config_t* dji_config)
                                                                 : 1.0f)        // 外接减速比
                                 * reduction_rate_map[dji_config->motor_type]); // 电机内部减速比
 
-    hdji->feedback_snacks = 0;
+    hdji->watchdog = -1;
 
     /* 注册回调 */
     DJI_t** mapped_motors = NULL;
@@ -119,7 +114,7 @@ void DJI_Init(DJI_t* hdji, const DJI_Config_t* dji_config)
 void DJI_DataDecode(DJI_t* hdji, const uint8_t data[8])
 {
     // 喂狗
-    DJI_Feed(hdji);
+    watchdog_feed(hdji);
 
     const float feedback_angle = (float) ((uint16_t) data[0] << 8 | data[1]) * 360.0f / 8192.0f;
     const float feedback_rpm   = (int16_t) ((uint16_t) data[2] << 8 | data[3]);
@@ -178,9 +173,6 @@ void DJI_SendSetIqCommand(CAN_HandleTypeDef* hcan, const DJI_IqSetCmdGroup_t cmd
                 DJI_t* hdji = map[i].motors[j + cmd_group];
                 if (hdji != NULL)
                 {
-                    // 吃小零食
-                    DJI_Eat(hdji);
-
                     const int32_t iq_cmd = hdji->reverse ? -hdji->iq_cmd : hdji->iq_cmd;
                     iq_data[1 + j * 2]   = (uint8_t) (iq_cmd & 0xFF);      // 电流值低 8 位
                     iq_data[0 + j * 2]   = (uint8_t) (iq_cmd >> 8 & 0xFF); // 电流值高 8 位
