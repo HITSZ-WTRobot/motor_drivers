@@ -1,5 +1,7 @@
 # motor drivers
 
+!IMPORTANT 本仓库已经停止维护，请移步 https://github.com/HITSZ-WTRobot-Packages/MotorDrivers
+
 本仓库为基于 STM32 HAL 库 + FreeRTOS CMSISv2 的统一电机驱动接口
 
 ## 支持的电机类型
