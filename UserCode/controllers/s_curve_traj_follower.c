@@ -79,7 +79,8 @@ void SCurveTraj_Axis_ResetAll(SCurveTrajFollower_Axis_t* follower)
     // 清零 S 曲线
     follower->running = false;
     SCurve_Reset(&follower->s);
-    memset(&follower->pd, 0, sizeof(follower->pd));
+    // memset(&follower->pd, 0, sizeof(follower->pd));
+    PD_Reset(&follower->pd);
     Motor_VelCtrl_SetRef(follower->ctrl, 0);
     MotorCtrl_ResetAngle(follower->ctrl);
 }
@@ -88,7 +89,8 @@ void SCurveTraj_Axis_Stop(SCurveTrajFollower_Axis_t* follower)
 {
     follower->running = false;
     Motor_VelCtrl_SetRef(follower->ctrl, 0);
-    memset(&follower->pd, 0, sizeof(follower->pd));
+    // memset(&follower->pd, 0, sizeof(follower->pd));
+    PD_Reset(&follower->pd);
 }
 
 // 辅助函数
@@ -259,7 +261,8 @@ void SCurveTraj_Group_ResetAll(SCurveTrajFollower_Group_t* follower)
     SCurve_Reset(&follower->s);
     for (size_t i = 0; i < follower->item_count; i++)
     {
-        memset(&follower->items[i].pd, 0, sizeof(follower->items[i].pd));
+        // memset(&follower->items[i].pd, 0, sizeof(follower->items[i].pd));
+        PD_Reset(&follower->items[i].pd);
         Motor_VelCtrl_SetRef(follower->items[i].ctrl, 0);
         MotorCtrl_ResetAngle(follower->items[i].ctrl);
     }
@@ -270,7 +273,8 @@ void SCurveTraj_Group_Stop(SCurveTrajFollower_Group_t* follower)
     for (size_t i = 0; i < follower->item_count; i++)
     {
         Motor_VelCtrl_SetRef(follower->items[i].ctrl, 0);
-        memset(&follower->items[i].pd, 0, sizeof(follower->items[i].pd));
+        // memset(&follower->items[i].pd, 0, sizeof(follower->items[i].pd));
+        PD_Reset(&follower->items[i].pd);
     }
 }
 
