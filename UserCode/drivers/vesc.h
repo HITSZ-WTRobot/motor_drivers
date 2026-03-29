@@ -170,7 +170,7 @@ typedef struct
     float              angle_zero; ///< 零点角度
 
     uint32_t feedback_count; ///< 反馈数
-    uint32_t snacks;         ///< 小零食
+    int32_t  watchdog;       ///<
     struct
     {
         float erpm;          ///< 电转速
@@ -216,10 +216,20 @@ void              VESC_CAN_Fifo0ReceiveCallback(CAN_HandleTypeDef* hcan);
 void              VESC_CAN_BaseReceiveCallback(const CAN_HandleTypeDef*   hcan,
                                                const CAN_RxHeaderTypeDef* header,
                                                const uint8_t              data[]);
-
+/**
+ * @brief 连接检测
+ * @attention 检测方式依赖 watchdog，你需要在定时器里吃狗；你必须手动将 watchdog 清零来启用
+ * @param hvesc
+ * @return 是否连接
+ */
 static bool VESC_isConnected(VESC_t* hvesc)
 {
-    return hvesc->snacks > 0;
+    return hvesc->watchdog > 0;
+}
+
+static int32_t* VESC_GetWatchdog(VESC_t* hvesc)
+{
+    return &hvesc->watchdog;
 }
 
 #ifdef __cplusplus

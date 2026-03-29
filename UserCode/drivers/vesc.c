@@ -32,15 +32,10 @@ extern "C"
 {
 #endif
 
-static void VESC_Eat(VESC_t* vesc)
+static void watchdog_feed(VESC_t* vesc)
 {
-    if (vesc->snacks > 0)
-        vesc->snacks--;
-}
-
-static void VESC_Feed(VESC_t* vesc)
-{
-    vesc->snacks = 5;
+    if (vesc->watchdog != -1)
+        vesc->watchdog = 10;
 }
 
 typedef struct
@@ -195,7 +190,7 @@ void VESC_CAN_DataDecode(VESC_t*                       hvesc,
                          const VESC_CAN_PocketStatus_t pocket_id,
                          const uint8_t                 data[8])
 {
-    VESC_Feed(hvesc);
+    watchdog_feed(hvesc);
     ++hvesc->feedback_count;
 
     switch (pocket_id)
@@ -265,6 +260,8 @@ void VESC_Init(VESC_t* hvesc, const VESC_Config_t* config)
     hvesc->enable     = true;
     hvesc->auto_zero  = config->auto_zero;
 
+    hvesc->watchdog = -1;
+
     VESC_FeedbackMap* map_ptr = NULL;
     for (int i = 0; i < map_size; i++)
         if (map[i].hcan == hvesc->hcan)
@@ -306,7 +303,6 @@ void VESC_Init(VESC_t* hvesc, const VESC_Config_t* config)
  */
 void VESC_SendSetCmd(VESC_t* hvesc, const VESC_CAN_PocketSet_t pocket_id, const float value)
 {
-    VESC_Eat(hvesc);
     static uint8_t data[8] = { 0 };
     get_set_command_data(hvesc, pocket_id, value, data);
     CAN_SendMessage(hvesc->hcan,

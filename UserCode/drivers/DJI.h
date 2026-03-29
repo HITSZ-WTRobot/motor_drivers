@@ -77,8 +77,8 @@ typedef struct
     float inv_reduction_rate; ///< 减速比
 
     /* Feedback */
-    uint32_t feedback_snacks; ///< 每次发送控制指令 feed--, 接收到控制指令 feed = 10
-    uint32_t feedback_count;  //< 接收到的反馈数据数量
+    int32_t  watchdog;
+    uint32_t feedback_count; //< 接收到的反馈数据数量
     struct
     {
         float mech_angle; //< 单圈机械角度 (unit: degree)
@@ -136,9 +136,20 @@ void DJI_CAN_BaseReceiveCallback(const CAN_HandleTypeDef*   hcan,
 
 void DJI_SendSetIqCommand(CAN_HandleTypeDef* hcan, DJI_IqSetCmdGroup_t cmd_group);
 
+/**
+ * @brief 连接检测
+ * @attention 检测方式依赖 watchdog，你需要在定时器里吃狗；你必须手动将 watchdog 清零来启用
+ * @param hdji
+ * @return 是否连接
+ */
 static bool DJI_isConnected(const DJI_t* hdji)
 {
-    return hdji->feedback_snacks > 0;
+    return hdji->watchdog > 0;
+}
+
+static int32_t* DJI_GetWatchdog(DJI_t* dji)
+{
+    return &dji->watchdog;
 }
 
 #ifdef __cplusplus
