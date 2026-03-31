@@ -81,7 +81,7 @@ uint32_t CAN_SendMessage(CAN_HandleTypeDef*         hcan,
         // 在中断中直接调用
         if (HAL_CAN_AddTxMessage(hcan, header, data, &mailbox) != HAL_OK)
         {
-            CAN_ERROR_HANDLER();
+            return CAN_SEND_FAILED;
         }
     }
     else
@@ -92,7 +92,7 @@ uint32_t CAN_SendMessage(CAN_HandleTypeDef*         hcan,
             return CAN_SEND_FAILED;
         if (HAL_CAN_AddTxMessage(hcan, header, data, &mailbox) != HAL_OK)
         {
-            CAN_ERROR_HANDLER();
+            return CAN_SEND_FAILED;
         }
         osMutexRelease(get_can_mutex());
     }
